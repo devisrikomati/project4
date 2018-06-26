@@ -6,7 +6,7 @@
 <h1> Are you sure you want to delete {{shoppingmall.name}}? </h1>
 <form action="{{ url_for('deleteShoppingmall', shoppingmall_id=shoppingmall_id)}}" method = 'post'>
 <input type='submit', value = 'Delete'>
-<input type='submit', value = 'Cancel'>
+<a href ="/shoppingmall"> Cancel </a>
 </form>
 </body>
 </html>
