@@ -1,4 +1,3 @@
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Shoppingmall, Cloth, User
@@ -182,7 +181,6 @@ def gdisconnect():
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-   
     if result['status'] == '200':
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
@@ -218,10 +216,10 @@ def logout():
 def shoppingmallclothJSON(brand_id):
     session = DBSession()
     shoppingmall = session.query(Shoppingmall).filter_by(
-        id=shoppingmall_id).one()
+                   id=shoppingmall_id).one()
     details = session.query(Cloth).filter_by(
-        shoppingmall_id=shoppingmall_id).all()
-    session.close()    
+               shoppingmall_id=shoppingmall_id).all()
+    session.close()
     return jsonify(Cloth=[i.serialize for i in details])
 
 
@@ -259,14 +257,15 @@ def newShoppingmall():
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
-        newShoppingmall = Shoppingmall(name=request.form['name'], user_id=login_session['user_id'])
+        newShoppingmall = Shoppingmall(name=request.form['name'],
+                                       user_id=login_session['user_id'])
         session.add(newShoppingmall)
-        flash('New  shoppingmall %s Successfully Created' % newShoppingmall.name)
+        flash('New shoppingmall %s Successfully\
+              Created' % newShoppingmall.name)
         session.commit()
         session.close()
         return redirect(url_for('showShoppingmalls'))
     else:
-        
         return render_template('newShoppingmall.html')
     # return "This page will be for making a new brand"
 
@@ -277,16 +276,15 @@ def newShoppingmall():
            methods=['GET', 'POST'])
 def editShoppingmall(shoppingmall_id):
     session = DBSession()
-   
     if 'username' not in login_session:
         return redirect('/login')
-    editShoppingmall = session.query(Shoppingmall).filter_by(id=shoppingmall_id).one()
+    editShoppingmall = session.query(Shoppingmall).filter_by(
+                       id=shoppingmall_id).one()
     if editShoppingmall.user_id != login_session['user_id']:
         return "<html><script>alert('you are not allowed to edit this\
         restaurant.Please create your own shoppinngmall\
-        to edit.');</script></html>"    
+        to edit.');</script></html>"
     if request.method == 'POST':
-   
             editShoppingmall.name = request.form['name']
             session.add(editShoppingmall)
             flash('Shoppingmall Successfully Edited %s' % request.form['name'])
@@ -295,7 +293,6 @@ def editShoppingmall(shoppingmall_id):
             return redirect(url_for('showShoppingmalls',
                             shoppingmall_id=shoppingmall_id))
     else:
-        
         return render_template('editShoppingmall.html',
                                shoppingmall_id=shoppingmall_id,
                                shoppingmall=editShoppingmall)
@@ -313,11 +310,12 @@ def deleteShoppingmall(shoppingmall_id):
         Shoppingmall).filter_by(id=shoppingmall_id).one()
     if 'username' not in login_session:
         return redirect('/login')
-    deleteShoppingmall = session.query(Shoppingmall).filter_by(id=shoppingmall_id).one()
+    deleteShoppingmall = session.query(Shoppingmall).filter_by(
+                         id=shoppingmall_id).one()
     if deleteShoppingmall.user_id != login_session['user_id']:
         return "<html><script>alert('you are not allowed to delete this\
         shoppingmall.Please create your own shoppinngmall\
-        to edit.');</script></html>"       
+        to edit.');</script></html>"
     if request.method == 'POST':
         session.delete(deleteShoppingmall)
         session.commit()
@@ -337,12 +335,12 @@ def showCloth(shoppingmall_id):
     session = DBSession()
     shoppingmall = session.query(Shoppingmall).filter_by(
                    id=shoppingmall_id).one()
-    creator = getUserInfo(shoppingmall.user_id)               
+    creator = getUserInfo(shoppingmall.user_id)
     details = session.query(Cloth).filter_by(
               shoppingmall_id=shoppingmall_id).all()
     session.close()
     return render_template('cloth.html', details=details,
-                           shoppingmall=shoppingmall,creator=creator)
+                           shoppingmall=shoppingmall, creator=creator)
     # return 'This page is the product for brand %s' % brand_id
 
 # Create a new product details
@@ -352,14 +350,15 @@ def showCloth(shoppingmall_id):
            methods=['GET', 'POST'])
 def newCloth(shoppingmall_id):
     session = DBSession()
-   
     if 'username' not in login_session:
         return redirect('/login')
-    shoppingmall = session.query(Shoppingmall).filter_by(id=shoppingmall_id).one()
+    shoppingmall = session.query(Shoppingmall).filter_by(
+                   id=shoppingmall_id).one()
     if login_session['user_id'] != shoppingmall.user_id:
         return "<script>function myFunction() {alert('You are not authorized\
-        to add menu items to this shoppingmall. Please create your own shoppingmall\
-        model in order to add items.');}</script><body onload='myFunction()''>"    
+        to add menu items to this shoppingmall. Please create your own\
+        shoppingmall model in order to add\
+        items.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         newShoppingmall = Cloth(
             name=request.form['name'],
@@ -377,8 +376,6 @@ def newCloth(shoppingmall_id):
     else:
         return render_template('newCloth.html',
                                shoppingmall_id=shoppingmall_id)
-
-   
 # return 'This page is for making a new product details for shoppingmall %s'
 
 # Edit a cloth details
@@ -395,8 +392,9 @@ def editCloth(shoppingmall_id, cloth_id):
                    id=shoppingmall_id).one()
     if login_session['user_id'] != shoppingmall.user_id:
         return "<script>function myFunction() {alert('You are not authorized\
-        to edit to this shoppingmall. Please create your own gun model in order\
-        to edit items.');}</script><body onload='myFunction()''>"               
+        to edit to this shoppingmall. Please create\
+        your own gun model in order to edit\
+        items.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         if request.form['name']:
             editCloth.name = request.form['name']
@@ -432,8 +430,8 @@ def deleteCloth(shoppingmall_id, cloth_id):
     deleteCloth = session.query(Cloth).filter_by(id=cloth_id).one()
     if login_session['user_id'] != shoppingmall.user_id:
         return "<script>function myFunction() {alert('You are not authorized\
-        to delete this shoppingmalls. Please create your own gun model in order\
-        to delete items.');}</script><body onload='myFunction()''>"
+        to delete this shoppingmalls. Please create your own gun model in\
+        order to delete items.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(deleteCloth)
         session.commit()
