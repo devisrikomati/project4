@@ -14,7 +14,7 @@
     python database_setup.py to get the database.
     python clothes.py to get the data file.
     python mainproject.py to final output. 
-    Then go to any webbrowser and type the localhost:2000.
+    Then go to any webbrowser and type the localhost:8080.
     For deactivate flask: just enter deactivate
 #### For Google Login
     For API client ID:
