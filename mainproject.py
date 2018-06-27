@@ -1,18 +1,18 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Shoppingmall, Cloth, User
-# Import Login session
+""" Import Login session """
 from flask import session as login_session
 import random
 import string
-# imports for gconnect
+""" imports for gconnect """
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 import json
 from flask import make_response
 import requests
-# import login decorator
+""" import login decorator """
 from functools import wraps
 from flask import Flask, render_template
 from flask import request, redirect, jsonify, url_for, flash
@@ -43,17 +43,17 @@ def showlogin():
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     session = DBSession()
-    # validate state token
+    """ validate state token """
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application-json'
         session.close()
         return response
-    # Obtain authorization code
+    """ Obtain authorization code """
     code = request.data
 
     try:
-        # upgrade the authorization code in credentials object
+        """ upgrade the authorization code in credentials object """
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
@@ -63,19 +63,19 @@ def gconnect():
         response.headers['Content-Type'] = 'application-json'
         return response
 
-    # Check that the access token is valid.
+    """ Check that the access token is valid. """
     access_token = credentials.access_token
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
            % access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
-    # If there was an error in the access token info, abort.
+    """ If there was an error in the access token info, abort. """
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    # Verify that the access token is used for the intended user.
+    """Verify that the access token is used for the intended user."""
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
         response = make_response(
@@ -83,14 +83,14 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    # Verify that the access token is valid for this app.
+    """ Verify that the access token is valid for this app."""
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
             json.dumps("Token's client ID does not match app's."), 401)
         print("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
-    # Access token within the app
+    """ Access token within the app"""
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
@@ -100,12 +100,12 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    # Store the access token in the session for later use.
+    """ Store the access token in the session for later use."""
 
     login_session['access_token'] = credentials.access_token
     login_session['gplus_id'] = gplus_id
 
-    # Get user info
+    """ Get user info"""
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
     params = {'access_token': access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
@@ -115,7 +115,7 @@ def gconnect():
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
-    # See if user exists or if it doesn't make a new one
+    """ See if user exists or if it doesn't make a new one"""
     user_id = getUserID(data["email"])
     if not user_id:
         user_id = createUser(login_session)
@@ -133,7 +133,7 @@ def gconnect():
     print("done!")
     return output
 
-# Helper Functions
+""" Helper Functions"""
 
 
 def createUser(login_session):
@@ -166,11 +166,11 @@ def getUserID(email):
         return None
 
 
-# DISCONNECT - Revoke a current user's token and reset their login_session.
+""" DISCONNECT - Revoke a current user's token and reset their login_session."""
 @app.route('/gdisconnect')
 def gdisconnect():
     session = DBSession()
-    # only disconnect a connected User
+    """ only disconnect a connected User"""
     access_token = login_session.get('access_token')
 
     if access_token is None:
@@ -237,7 +237,7 @@ def shoppingmallsJSON():
     shoppingmalls = session.query(Shoppingmall).all()
     session.close()
     return jsonify(shoppingmalls=[r.serialize for r in shoppingmalls])
-# Show all shoppingmalls
+""" Show all shoppingmalls"""
 
 
 @app.route('/')
@@ -245,12 +245,12 @@ def shoppingmallsJSON():
 def showShoppingmalls():
     session = DBSession()
     shoppingmalls = session.query(Shoppingmall).all()
-    # return "This page will show all my brands"
+    """ return "This page will show all my shoppingmall" """
     session.close()
     return render_template('shoppingmalls.html', shoppingmalls=shoppingmalls)
 
 
-# Create a new brand
+""" Create a new brand"""
 @app.route('/shoppingmall/new/', methods=['GET', 'POST'])
 def newShoppingmall():
     session = DBSession()
@@ -267,9 +267,9 @@ def newShoppingmall():
         return redirect(url_for('showShoppingmalls'))
     else:
         return render_template('newShoppingmall.html')
-    # return "This page will be for making a new brand"
+    """ return "This page will be for making a new shoppingmall" """
 
-# Edit a brand
+""" Edit a shoppingmall"""
 
 
 @app.route('/shoppingmall/<int:shoppingmall_id>/edit/',
@@ -297,9 +297,9 @@ def editShoppingmall(shoppingmall_id):
                                shoppingmall_id=shoppingmall_id,
                                shoppingmall=editShoppingmall)
 
-    # return 'This page will be for editing shoppingmall %s' % shoppingmall_id
+    """ return 'This page will be for editing shoppingmall %s' % shoppingmall_id """
 
-# Delete a shoppingmall
+""" Delete a shoppingmall"""
 
 
 @app.route('/shoppingmall/<int:shoppingmall_id>/delete/',
@@ -328,7 +328,7 @@ def deleteShoppingmall(shoppingmall_id):
                                shoppingmall=deleteShoppingmall)
 
 
-# Show a brand product
+""" Show a shoppingmall clothes"""
 @app.route('/shoppingmall/<int:shoppingmall_id>/')
 @app.route('/shoppingmall/<int:shoppingmall_id>/cloth/')
 def showCloth(shoppingmall_id):
@@ -341,9 +341,9 @@ def showCloth(shoppingmall_id):
     session.close()
     return render_template('cloth.html', details=details,
                            shoppingmall=shoppingmall, creator=creator)
-    # return 'This page is the product for brand %s' % brand_id
+    """ return 'This page is the clothes for shoppingmall %s' % shoppingmall_id"""
 
-# Create a new product details
+""" Create a new product details"""
 
 
 @app.route('/shoppingmall/<int:shoppingmall_id>/shoppingmall/new/',
@@ -376,9 +376,9 @@ def newCloth(shoppingmall_id):
     else:
         return render_template('newCloth.html',
                                shoppingmall_id=shoppingmall_id)
-# return 'This page is for making a new product details for shoppingmall %s'
+""" return 'This page is for making a new cloth details for shoppingmall %s' """
 
-# Edit a cloth details
+""" Edit a cloth details"""
 
 
 @app.route('/shoppingmall/<int:shoppingmall_id>/cloth/<int:cloth_id>/edit',
@@ -414,9 +414,9 @@ def editCloth(shoppingmall_id, cloth_id):
                                shoppingmall_id=shoppingmall_id,
                                cloth_id=cloth_id, details=editCloth)
 
-    # return 'This page is for editing product details %s' % product_id
+    """ return 'This page is for editing cloth details %s' % cloth_id"""
 
-# Delete a cloth details
+"""Delete a cloth details"""
 
 
 @app.route('/shoppingmall/<int:shoppingmall_id>/cloth/<int:cloth_id>/delete',
@@ -441,7 +441,7 @@ def deleteCloth(shoppingmall_id, cloth_id):
         return render_template('deleteCloth.html',
                                shoppingmall_id=shoppingmall_id,
                                cloth_id=cloth_id, details=deleteCloth)
-    # return "This page is for deleting cloth details %s" % cloth_id
+    """ return "This page is for deleting cloth details %s" % cloth_id """
 
 
 if __name__ == '__main__':
