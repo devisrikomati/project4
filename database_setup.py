@@ -51,6 +51,8 @@ class Cloth(Base):
             'description': self.description,
             'price': self.price,
             'type': self.type,
+            'shoppingmall_id': self.shoppingmall_id,
+            'user_id':self.user_id
         }
 
 """database named as dresses"""
